@@ -26,5 +26,5 @@
 // #include "Out.h"
 // #include "Split.h"
 // #include "SplitExpected.h"
-// #include "Transform.h"
-// #include "Write.h"
+#include "Transform.h"
+#include "Write.h"
