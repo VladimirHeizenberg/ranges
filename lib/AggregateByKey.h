@@ -37,7 +37,8 @@ public:
 
     template<class Range>
     auto operator()(const Range& range) const {
-        std::map<std::decay_t<decltype(key_(*range.begin()))>, Right> aggregated;
+        using key_type = std::decay_t<decltype(key_(*range.begin()))>;
+        std::map<key_type, Right> aggregated;
         for (auto& elem : range) {
             auto t = key_(elem);
             if (!aggregated.contains(t)) {
@@ -45,7 +46,7 @@ public:
             }
             aggregation_(elem, aggregated[t]);
         }
-        return AggregateByKeyRange<std::decay_t<decltype(key_(*range.begin()))>,Right>(std::move(aggregated));
+        return AggregateByKeyRange<key_type, Right>(std::move(aggregated));
     }
 
 private:

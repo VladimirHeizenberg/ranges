@@ -8,7 +8,7 @@
 template<class Range, class Predicate>
 class TransformIterator {
 public:
-    using value_type = typename Range::value_type;
+    using value_type = std::invoke_result_t<Predicate, typename Range::value_type>;
 
     TransformIterator(Range::const_iterator it,
                       Range::const_iterator end,
@@ -27,7 +27,7 @@ public:
         return copy;
     }
 
-    auto operator*() {
+    value_type operator*() {
         return func_(*it_);
     }
 
@@ -47,7 +47,7 @@ private:
 template<class Range, class Predicate>
 class TransformRange {
 public:
-    using value_type = Range::value_type;
+    using value_type = std::invoke_result_t<Predicate, typename Range::value_type>;
     using const_iterator = TransformIterator<Range, Predicate>;
 
     TransformRange(const Range& range, const Predicate& pred)

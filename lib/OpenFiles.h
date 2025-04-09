@@ -1,6 +1,7 @@
 #pragma once
 
 #include <fstream>
+#include <optional>
 
 #include "Range.h"
 #include "Transform.h"
@@ -14,7 +15,7 @@ class OpenFiles : public Pipe {
                 return std::nullopt;
             }
             return stream;
-        }
+        };
         return TransformRange(range, function);
     }
 };
