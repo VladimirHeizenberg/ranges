@@ -6,7 +6,10 @@
 template<RangeSatisfiable Range, class Predicate>
 class FilterIterator {
 public:
-    using value_type = typename Range::value_type;
+    using value_type        = typename Range::value_type;
+    using reference         = value_type&;
+    using const_reference   = const reference;
+    using iterator_category = std::input_iterator_tag;
 
     FilterIterator(Range::const_iterator it,
         Range::const_iterator end,
@@ -33,7 +36,7 @@ public:
         return copy;
     }
 
-    value_type operator*() {
+    const_reference operator*() {
         return *it_;
     }
 
@@ -58,18 +61,20 @@ public:
     using const_iterator = FilterIterator<Range, Predicate>;
 
     FilterRange(const Range& range, const Predicate& pred)
-        : range_(range)
+        : begin_(range.begin())
+        , end_(range.end())
         , pred_(pred) {}
 
     const_iterator begin() const {
-        return const_iterator(range_.begin(), range_.end(), pred_);
+        return const_iterator(begin_, end_, pred_);
     }
 
     const_iterator end() const {
-        return const_iterator(range_.end(), range_.end(), pred_);
+        return const_iterator(end_, end_, pred_);
     }
 private:
-    Range range_;
+    Range::const_iterator begin_;
+    Range::const_iterator end_;
     Predicate pred_;
 };
 

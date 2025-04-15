@@ -1,7 +1,7 @@
 #pragma once
 #include "Range.h"
 
-template<RangeSatisfiable Container>
+template<class Container>
 class AsDataFlow : public Pipe {
 public:
     using value_type = typename Container::value_type;

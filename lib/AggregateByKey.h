@@ -10,8 +10,12 @@ class AggregateByKeyRange {
 public: 
     using value_type = std::pair<Key, Value>;
     using const_iterator = std::map<Key, Value>::const_iterator;
+
     AggregateByKeyRange(std::map<Key, Value>&& aggregated)
-    : aggregated_(std::forward<std::map<Key, Value>>(aggregated)) {}
+    : aggregated_(std::move(aggregated)) {}
+
+    AggregateByKeyRange(const std::map<Key, Value>& aggregated)
+    : aggregated_(aggregated) {}
 
     const_iterator begin() const {
         return aggregated_.begin();
@@ -24,33 +28,33 @@ private:
     std::map<Key, Value> aggregated_;
 };
 
-template<class Right, class Aggregation, class Key>
+template<class Value, class AggregationFunctionType, class KeyFunction>
 class AggregateByKey : public Pipe {
 public:
     AggregateByKey(
-        Right&& right,
-        const Aggregation& aggregation,
-        const Key& key
-    ) : right_(std::forward<Right>(right))
-      , aggregation_(aggregation)
+        const Value& right,
+        const AggregationFunctionType& aggregation,
+        const KeyFunction& key
+    ) : initial_right_value_(right)
+      , aggregation_function_(aggregation)
       , key_(key) {}
 
     template<RangeSatisfiable Range>
     auto operator()(const Range& range) const {
         using key_type = std::decay_t<decltype(key_(*range.begin()))>;
-        std::map<key_type, Right> aggregated;
+        std::map<key_type, Value> aggregated;
         for (auto& elem : range) {
             auto t = key_(elem);
             if (!aggregated.contains(t)) {
-                aggregated[t] = right_;
+                aggregated[t] = initial_right_value_;
             }
-            aggregation_(elem, aggregated[t]);
+            aggregation_function_(elem, aggregated[t]);
         }
-        return AggregateByKeyRange<key_type, Right>(std::move(aggregated));
+        return AggregateByKeyRange<key_type, Value>(std::move(aggregated));
     }
 
 private:
-    Right right_;
-    Aggregation aggregation_;
-    Key key_;
+    Value initial_right_value_;
+    AggregationFunctionType aggregation_function_;
+    KeyFunction key_;
 };

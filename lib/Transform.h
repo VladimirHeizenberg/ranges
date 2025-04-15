@@ -5,14 +5,17 @@
 
 #include "Range.h"
 
-template<RangeSatisfiable Range, class Predicate>
+template<RangeSatisfiable Range, class TransformationFunction>
 class TransformIterator {
 public:
-    using value_type = std::invoke_result_t<Predicate, typename Range::value_type>;
+    using value_type        = std::invoke_result_t<TransformationFunction, typename Range::value_type>;
+    using reference         = value_type&;
+    using const_reference   = const reference;
+    using iterator_category = std::input_iterator_tag;
 
     TransformIterator(Range::const_iterator it,
                       Range::const_iterator end,
-                      Predicate func)
+                      TransformationFunction func)
         : it_(it)
         , func_(func) {}
 
@@ -27,7 +30,7 @@ public:
         return copy;
     }
 
-    value_type operator*() {
+    const_reference operator*() {
         return func_(*it_);
     }
 
@@ -41,16 +44,16 @@ public:
 
 private:
     typename Range::const_iterator it_;
-    Predicate func_;
+    TransformationFunction func_;
 };
 
-template<RangeSatisfiable Range, class Predicate>
+template<RangeSatisfiable Range, class TransformationFunction>
 class TransformRange {
 public:
-    using value_type = std::invoke_result_t<Predicate, typename Range::value_type>;
-    using const_iterator = TransformIterator<Range, Predicate>;
+    using value_type = std::invoke_result_t<TransformationFunction, typename Range::value_type>;
+    using const_iterator = TransformIterator<Range, TransformationFunction>;
 
-    TransformRange(const Range& range, const Predicate& pred)
+    TransformRange(const Range& range, const TransformationFunction& pred)
         : range_(range)
         , pred_(pred) {}
 
@@ -63,19 +66,19 @@ public:
     }
 private:
     Range range_;
-    Predicate pred_;
+    TransformationFunction pred_;
 };
 
-template<class Predicate>
+template<class TransformationFunction>
 class Transform : public Pipe {
 public:
     template<RangeSatisfiable Range>
-    TransformRange<Range, Predicate> operator()(const Range& range) const {
+    TransformRange<Range, TransformationFunction> operator()(const Range& range) const {
         return TransformRange(range, func_);
     }
 
-    Transform(const Predicate& func)
+    Transform(const TransformationFunction& func)
         : func_(func) {}
 private:
-    Predicate func_;
+    TransformationFunction func_;
 };
