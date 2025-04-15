@@ -8,7 +8,7 @@
 
 class DropNullopt : public Pipe {
 public:
-    template<class Range>
+    template<RangeSatisfiable Range>
     auto operator()(const Range& range) const {
         using T = typename Range::value_type;
         static_assert(std::is_same_v<T, std::optional<typename T::value_type>>, 

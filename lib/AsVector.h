@@ -4,7 +4,7 @@
 
 class AsVector : public Pipe {
 public:
-    template<class Range>
+    template<RangeSatisfiable Range>
     std::vector<typename Range::value_type> operator()(const Range& range) const {
         std::vector<typename Range::value_type> res;
         for (auto t : range) {

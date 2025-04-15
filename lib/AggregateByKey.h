@@ -35,7 +35,7 @@ public:
       , aggregation_(aggregation)
       , key_(key) {}
 
-    template<class Range>
+    template<RangeSatisfiable Range>
     auto operator()(const Range& range) const {
         using key_type = std::decay_t<decltype(key_(*range.begin()))>;
         std::map<key_type, Right> aggregated;

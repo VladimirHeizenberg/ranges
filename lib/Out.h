@@ -7,7 +7,7 @@ public:
     Out(std::ostream& out)
     : out_(out){}
 
-    template<class Range>
+    template<RangeSatisfiable Range>
     Range& operator()(const Range& range) const {
         for (auto& item : range) {
             out_ << item << '\n';

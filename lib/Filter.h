@@ -3,7 +3,7 @@
 
 #include "Range.h"
 
-template<class Range, class Predicate>
+template<RangeSatisfiable Range, class Predicate>
 class FilterIterator {
 public:
     using value_type = typename Range::value_type;
@@ -51,7 +51,7 @@ private:
     Predicate func_;
 };
 
-template<class Range, class Predicate>
+template<RangeSatisfiable Range, class Predicate>
 class FilterRange {
 public:
     using value_type = Range::value_type;
@@ -76,7 +76,7 @@ private:
 template<class Predicate>
 class Filter : public Pipe {
 public:
-    template<class Range>
+    template<RangeSatisfiable Range>
     FilterRange<Range, Predicate> operator()(const Range& range) const {
         return FilterRange(range, func_);
     }

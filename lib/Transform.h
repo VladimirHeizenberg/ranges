@@ -5,7 +5,7 @@
 
 #include "Range.h"
 
-template<class Range, class Predicate>
+template<RangeSatisfiable Range, class Predicate>
 class TransformIterator {
 public:
     using value_type = std::invoke_result_t<Predicate, typename Range::value_type>;
@@ -44,7 +44,7 @@ private:
     Predicate func_;
 };
 
-template<class Range, class Predicate>
+template<RangeSatisfiable Range, class Predicate>
 class TransformRange {
 public:
     using value_type = std::invoke_result_t<Predicate, typename Range::value_type>;
@@ -69,7 +69,7 @@ private:
 template<class Predicate>
 class Transform : public Pipe {
 public:
-    template<class Range>
+    template<RangeSatisfiable Range>
     TransformRange<Range, Predicate> operator()(const Range& range) const {
         return TransformRange(range, func_);
     }

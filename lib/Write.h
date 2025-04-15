@@ -8,7 +8,7 @@ public:
     Write(std::ostream& out, const char delimiter)
         : out_(out), delimiter_(delimiter) {}
   
-    template<class Range>
+    template<RangeSatisfiable Range>
     Range operator()(const Range& range) const {
         for (auto& item : range) {
             out_ << item << delimiter_;
