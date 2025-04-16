@@ -41,7 +41,7 @@ public:
     using left_value_type  = typename LRange::value_type::value_type;
     using right_value_type = typename RRange::value_type::value_type;
 
-    JoinIteratorKV(LRange::const_iterator it1, const RRange& rrange)
+    JoinIteratorKV(LRange::iterator it1, const RRange& rrange)
     : it(it1)
     , right_range(rrange) {}
 
@@ -56,7 +56,7 @@ public:
         return copy;
     }
 
-    JoinResult<left_value_type, right_value_type> operator*() const {
+    JoinResult<left_value_type, right_value_type> operator*() {
         for (auto c : right_range) {
             if (c.key == (*it).key) {
                 return JoinResult<left_value_type, right_value_type>{(*it).value, c.value};
@@ -73,29 +73,46 @@ public:
         return it != other.it;
     }
 private:
-    typename LRange::const_iterator it;
+    typename LRange::iterator it;
     RRange right_range;
 };
 
-template<class LRange, class RRange>
+template<class T>
+struct extract_key_value {
+    using key_type = T;
+    using value_type = T;
+};
+
+template<class K, typename V>
+struct extract_key_value<KV<K, V>> {
+    using key_type = K;
+    using value_type = V;
+};
+
+template<class  LRange, typename RRange>
 class JoinKVRange {
 public:
 
-    using const_iterator = JoinIteratorKV<LRange, RRange>;
-    using left_value_type  = typename LRange::value_type::value_type;
-    using right_value_type = typename RRange::value_type::value_type;
+    using iterator = JoinIteratorKV<LRange, RRange>;
+
+    using raw_left_value_type = typename LRange::value_type;
+    using raw_right_value_type = typename RRange::value_type;
+
+    using left_value_type  = typename extract_key_value<raw_left_value_type>::value_type;
+    using right_value_type = typename extract_key_value<raw_right_value_type>::value_type;
+
     using value_type = JoinResult<left_value_type, right_value_type>;
 
     JoinKVRange(const LRange& lrange, const RRange& rrange)
     : lrange_(lrange)
     , rrange_(rrange) {}
 
-    const_iterator begin() const {
-        return const_iterator(lrange_.begin(), rrange_);
+    iterator begin() {
+        return iterator(lrange_.begin(), rrange_);
     }
 
-    const_iterator end() const {
-        return const_iterator(lrange_.end(), rrange_);
+    iterator end() {
+        return iterator(lrange_.end(), rrange_);
     }
 
 private:
@@ -103,32 +120,36 @@ private:
     RRange rrange_;
 };
 
-template<RangeSatisfiable Range>
+template<class  Range>
 class JoinKVObject : public Pipe {
 public:
     JoinKVObject(const Range& range)
-    : range_(range)
-    , using_key_(false) {}
+    : using_key_(false)
+    , range_(range) {}
 
-    template<RangeSatisfiable LRange>
-    auto operator()(const LRange& lrange) const {
-        return JoinKVRange<LRange, Range>(lrange, range_);
+    template<class LRange>
+    auto operator()(LRange&& lrange) const {
+        using CleanLRange = std::remove_reference_t<LRange>;
+
+        return JoinKVRange<CleanLRange, Range>(std::forward<LRange>(lrange), range_);
     }
 private:
     bool using_key_;
     Range range_;
 };
 
-template<RangeSatisfiable Range, class Key1, class Key2>
+template<class  Range, class Key1, class Key2>
 class JoinComparatorObject : public Pipe {
 public:
-    JoinComparatorObject(const Range& range, const Key1& key1, const Key2& key2) 
-    : range_(range)
+    JoinComparatorObject(Range&& range, const Key1& key1, const Key2& key2)
+    : range_(std::forward<Range>(range))
     , key1_(key1)
     , key2_(key2) {}
 
-    template<RangeSatisfiable LRange>
-    auto operator()(const LRange& lrange) const {
+    template<class LRange>
+    auto operator()(const LRange& lrange)const {
+        using ClearRange = std::remove_reference_t<Range>;
+
         auto new_l_range = lrange | Transform(
             [this](const typename LRange::value_type& value) {
                 return KV<
@@ -138,10 +159,10 @@ public:
             }
         );
         auto new_r_range = range_ | Transform(
-            [this](const typename Range::value_type& value) {
+            [this](const auto& value) {
                 return KV<
-                    std::invoke_result_t<Key2, typename Range::value_type>, 
-                    typename Range::value_type
+                    std::invoke_result_t<Key2, typename ClearRange::value_type>,
+                    typename ClearRange::value_type
                 >(key2_(value), value);
             }
         );
@@ -154,12 +175,12 @@ private:
 };
 
 
-template<RangeSatisfiable Range>
+template<class  Range>
 auto Join(const Range& range) {
-    return JoinKVObject(range);
+    return JoinKVObject<Range>(range);
 }
 
-template<RangeSatisfiable Range, class Key1, class Key2>
-auto Join(const Range& range, const Key1& key1, const Key2& key2) {
+template<class Range, class Key1, class Key2>
+auto Join(Range&& range, const Key1& key1, const Key2& key2) {
     return JoinComparatorObject<Range, Key1, Key2>(range, key1, key2);
 }

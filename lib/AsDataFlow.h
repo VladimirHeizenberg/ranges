@@ -5,21 +5,21 @@ template<class Container>
 class AsDataFlow : public Pipe {
 public:
     using value_type = typename Container::value_type;
-    using const_iterator = typename Container::const_iterator;
+    using iterator = typename Container::iterator;
 
-    AsDataFlow(const Container& container) 
-    : begin_(container.cbegin())
-    , end_(container.cend()) {}
+    AsDataFlow(Container& container) 
+    : begin_(container.begin())
+    , end_(container.end()) {}
 
-    const_iterator begin() const {
+    iterator begin() const {
         return begin_;
     }
 
-    const_iterator end() const {
+    iterator end() const {
         return end_;
     }
 
 private:
-    const_iterator begin_;
-    const_iterator end_;
+    iterator begin_;
+    iterator end_;
 };

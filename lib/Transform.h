@@ -5,7 +5,7 @@
 
 #include "Range.h"
 
-template<RangeSatisfiable Range, class TransformationFunction>
+template<class  Range, class TransformationFunction>
 class TransformIterator {
 public:
     using value_type        = std::invoke_result_t<TransformationFunction, typename Range::value_type>;
@@ -13,8 +13,8 @@ public:
     using const_reference   = const reference;
     using iterator_category = std::input_iterator_tag;
 
-    TransformIterator(Range::const_iterator it,
-                      Range::const_iterator end,
+    TransformIterator(typename Range::iterator it,
+                      typename Range::iterator end,
                       TransformationFunction func)
         : it_(it)
         , func_(func) {}
@@ -30,7 +30,7 @@ public:
         return copy;
     }
 
-    const_reference operator*() {
+    value_type operator*() {
         return func_(*it_);
     }
 
@@ -43,42 +43,43 @@ public:
     }
 
 private:
-    typename Range::const_iterator it_;
+    typename Range::iterator it_;
     TransformationFunction func_;
 };
 
-template<RangeSatisfiable Range, class TransformationFunction>
+template<class  Range, class TransformationFunction>
 class TransformRange {
 public:
-    using value_type = std::invoke_result_t<TransformationFunction, typename Range::value_type>;
-    using const_iterator = TransformIterator<Range, TransformationFunction>;
+    using ClearRange = std::remove_reference_t<Range>;
+    using value_type = std::invoke_result_t<TransformationFunction, typename ClearRange::value_type>;
+    using iterator = TransformIterator<ClearRange, TransformationFunction>;
 
-    TransformRange(const Range& range, const TransformationFunction& pred)
+    TransformRange(Range&& range, const TransformationFunction& pred)
         : range_(range)
         , pred_(pred) {}
 
-    const_iterator begin() const {
-        return const_iterator(range_.begin(), range_.end(), pred_);
+    iterator begin() {
+        return iterator(range_.begin(), range_.end(), pred_);
     }
 
-    const_iterator end() const {
-        return const_iterator(range_.end(), range_.end(), pred_);
+    iterator end() {
+        return iterator(range_.end(), range_.end(), pred_);
     }
 private:
     Range range_;
     TransformationFunction pred_;
 };
 
-template<class TransformationFunction>
+template<class  TransformationFunction>
 class Transform : public Pipe {
 public:
-    template<RangeSatisfiable Range>
-    TransformRange<Range, TransformationFunction> operator()(const Range& range) const {
-        return TransformRange(range, func_);
+    template<class  Range>
+    auto operator()(Range&& range) const {
+        return TransformRange<Range, TransformationFunction>(std::forward<Range>(range), func_);
     }
 
-    Transform(const TransformationFunction& func)
-        : func_(func) {}
+    Transform(TransformationFunction func)
+        : func_(std::move(func)) {}
 private:
     TransformationFunction func_;
 };

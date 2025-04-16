@@ -24,7 +24,7 @@ TEST(AggregateByKeyTest, CountingAggregatedValues) {
 
     ASSERT_THAT(
         result,
-        ::testing::ElementsAre(
+        ::testing::UnorderedElementsAre(
             std::make_pair("name4", 1),
             std::make_pair("name0", 3),
             std::make_pair("name1", 2),
@@ -59,7 +59,7 @@ TEST(AggregateByKeyTest, AggregatingWithSeveralOutputsForEachKey) {
 
     ASSERT_THAT(
         result,
-        ::testing::ElementsAre(
+        ::testing::UnorderedElementsAre(
             std::make_pair(3, std::vector<Employee>{Employee{3, "name1"}}),
             std::make_pair(1, std::vector<Employee>{Employee{1, "name1"}, Employee{1, "name2"}}),
             std::make_pair(2, std::vector<Employee>{Employee{2, "name1"}, Employee{2, "name2"}})

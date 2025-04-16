@@ -4,10 +4,11 @@
 
 class AsVector : public Pipe {
 public:
-    template<RangeSatisfiable Range>
-    std::vector<typename Range::value_type> operator()(const Range& range) const {
-        std::vector<typename Range::value_type> res;
-        for (auto t : range) {
+    template<class  Range>
+    auto operator()(Range&& range) const  {
+        using ClearRange = std::remove_reference_t<Range>;
+        std::vector<typename ClearRange::value_type> res;
+        for (auto&& t : range) {
             res.push_back(t);
         }
         return res;

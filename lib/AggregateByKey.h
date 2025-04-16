@@ -9,7 +9,7 @@ template<class Key, class Value>
 class AggregateByKeyRange {
 public: 
     using value_type = std::pair<Key, Value>;
-    using const_iterator = std::map<Key, Value>::const_iterator;
+    using iterator = std::map<Key, Value>::iterator;
 
     AggregateByKeyRange(std::map<Key, Value>&& aggregated)
     : aggregated_(std::move(aggregated)) {}
@@ -17,12 +17,12 @@ public:
     AggregateByKeyRange(const std::map<Key, Value>& aggregated)
     : aggregated_(aggregated) {}
 
-    const_iterator begin() const {
-        return aggregated_.cbegin();
+    iterator begin() {
+        return aggregated_.begin();
     }
     
-    const_iterator end() const {
-        return aggregated_.cend();
+    iterator end() {
+        return aggregated_.end();
     }
 private:
     std::map<Key, Value> aggregated_;
@@ -39,8 +39,8 @@ public:
       , aggregation_function_(aggregation)
       , key_(key) {}
 
-    template<RangeSatisfiable Range>
-    auto operator()(const Range& range) const {
+    template<class  Range>
+    auto operator()(Range&& range) const {
         using key_type = std::decay_t<decltype(key_(*range.begin()))>;
         std::map<key_type, Value> aggregated;
         for (auto& elem : range) {

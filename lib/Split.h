@@ -1,111 +1,102 @@
 #pragma once
 
+#include <istream>
 #include <string>
-#include <iterator>
+#include <vector>
+#include <__filesystem/recursive_directory_iterator.h>
 
 #include "Range.h"
 
 template<class Range>
 class SplitIterator {
 public:
-    using value_type = typename std::string;
-    using size_type = size_t;
-
-    value_type operator*() {
-        return std::string()
-    }
-private:
-    std::istream_iterator it;
-};
-
-class Split : public Pipe {
-public:
-    Split(std::string&& delims)
-    : delims_(std::move(delims)) {}
-
-    Split(const std::string& delims)
-    : delims_(delims) {}
-
-    template<class Range>
-    SplitRange operator()(const Range& range) {
-
-    }
-private:
-    std::string delims_;
-};
-
-
-
-class Iterator {
-public:
+    using value_type        = std::string;
+    using reference         = std::string&;
+    using const_reference   = const std::string&;
     using iterator_category = std::input_iterator_tag;
-    using value_type = std::string;
-    Iterator(base_iterator outer, base_iterator end, const std::string& delims)
-        : outer_(outer), end_(end), delims_(delims) {
-        if (outer_ != end_) {
-            line_ = *outer_;
-            advance_token();
+
+    SplitIterator() = default;
+
+    SplitIterator(typename Range::iterator it1, typename Range::iterator end, std::string delims)
+        : it(it1), end_(end), delims_(std::move(delims)) {
+        read_next();
+    }
+
+    SplitIterator& operator++() {
+        word_.clear();
+        while (it != end_) {
+            char ch;
+            if (!it->get(ch)) {
+                it->clear();
+                it->seekg(0);
+                ++it;
+                return;
+            }
+            if (delims_.contains(ch)) {
+                return;
+            }
+            word_ += ch;
         }
-    }
-    std::string operator*() const {
-        return current_token_;
-    }
-    Iterator& operator++() {
-        advance_token();
         return *this;
     }
-    bool operator!=(const Iterator& other) const {
-        return outer_ != other.outer_ || token_pos_ != std::string::npos;
-    }
-private:
-    base_iterator outer_;
-    base_iterator end_;
-    std::string delims_;
-    std::string line_;
-    size_t token_start_ = 0;
-    size_t token_pos_ = std::string::npos;
-    std::string current_token_;
-    void advance_token() {
-        while (true) {
-            if (token_pos_ == std::string::npos) {
-                // нужно перейти к следующей строке
-                ++outer_;
-                if (outer_ == end_) return;
-                line_ = *outer_;
-                token_start_ = 0;
-            }
-            token_start_ = line_.find_first_not_of(delims_, token_start_);
-            if (token_start_ == std::string::npos) {
-                token_pos_ = std::string::npos;
-                continue; // пропускаем пустую строку
-            }
-            token_pos_ = line_.find_first_of(delims_, token_start_);
-            current_token_ = line_.substr(token_start_, token_pos_ - token_start_);
-            token_start_ = token_pos_;
-            return;
-        }
-    }
-};
 
+    SplitIterator operator++(int) {
+        SplitIterator tmp = *this;
+        ++(*this);
+        return tmp;
+    }
+
+    reference operator*() { return word_; }
+    std::string operator*() const { return word_; }
+
+    bool operator==(const SplitIterator& other) const {
+        return it == other.it && word_ == other.word_;
+    }
+
+    bool operator!=(const SplitIterator& other) const {
+        return !(*this == other);
+    }
+
+private:
+    typename Range::iterator it;
+    typename Range::iterator end_;
+    std::string delims_;
+    std::string word_;
+};
 
 template<class Range>
 class SplitRange {
 public:
-    using base_iterator = typename Range::const_iterator;
     using value_type = std::string;
+    using iterator = SplitIterator<Range>;
 
-    SplitRange(const Range& range, const std::string& delims)
-        : range_(range), delims_(delims) {}
+    SplitRange(Range&& range, std::string delims)
+    : range_(std::move(range))
+    , delims_(std::move(delims)) {}
 
-    Iterator begin() const {
-        return Iterator(range_.begin(), range_.end(), delims_);
+    iterator begin() {
+        return SplitIterator<Range>(range_.begin(), range_.end(), delims_);
     }
 
-    Iterator end() const {
-        return Iterator(range_.end(), range_.end(), delims_);
+    iterator end() {
+        return SplitIterator<Range>(range_.end(), range_.end(), delims_);
     }
 
 private:
-    const Range& range_;
+    Range range_;
+    std::string delims_;
+};
+
+class Split : public Pipe {
+public:
+    Split(std::string delims)
+    : delims_(std::move(delims)) {}
+
+    template<class Range>
+    auto operator()(Range&& range) const {
+        return SplitRange(std::forward<Range>(range), delims_);
+    }
+
+private:
     std::string delims_;
 };

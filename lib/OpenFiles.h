@@ -7,8 +7,8 @@
 #include "Transform.h"
 
 class OpenFiles : public Pipe {
-    template<RangeSatisfiable Range>
-    auto operator()(const Range& range) {
+    template<class Range>
+    auto operator()(Range&& range) {
         auto function = [](const std::filesystem::path path) -> std::optional<std::ifstream> {
             std::ifstream stream(path);
             if (!stream.is_open()) {

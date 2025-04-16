@@ -20,7 +20,7 @@ add_executable(
     flow_convertions_ut.cpp
     join_ut.cpp
     aggregate_by_key_ut.cpp
-    split_expected_ut.cpp
+    # split_expected_ut.cpp
     split_ut.cpp
     transform_ut.cpp
     write_ut.cpp

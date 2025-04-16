@@ -8,8 +8,8 @@
 
 class DropNullopt : public Pipe {
 public:
-    template<RangeSatisfiable Range>
-    auto operator()(const Range& range) const {
+    template<class  Range>
+    auto operator()(Range&& range) const {
         using T = typename Range::value_type;
         static_assert(std::is_same_v<T, std::optional<typename T::value_type>>, 
                       "Only std::optional<T> is allowed to be used with DropNullopt");
@@ -18,6 +18,7 @@ public:
             return val.has_value();
         };
 
-        return FilterRange(range, predicate);
+        // return FilterRange(std::forward<Range>(range), predicate);
+        return range | Filter(predicate);
     }
 };
