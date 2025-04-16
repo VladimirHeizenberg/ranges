@@ -8,7 +8,7 @@ class FilterIterator {
 public:
     using value_type        = typename Range::value_type;
     using reference         = value_type&;
-    using const_reference   = const reference;
+    using const_reference   = const value_type&;
     using iterator_category = std::input_iterator_tag;
 
     FilterIterator(Range::const_iterator it,
@@ -36,7 +36,7 @@ public:
         return copy;
     }
 
-    const_reference operator*() {
+    const_reference operator*() const {
         return *it_;
     }
 

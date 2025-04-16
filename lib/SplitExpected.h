@@ -9,8 +9,8 @@
 class SplitExpected : public Pipe {
     template<RangeSatisfiable Range>
     auto operator()(const Range& range) {
-        auto expected = [](const std::expected& val) {return val.has_value();};
-        auto unexpected = [](const std::expected& val) {return !val.has_value();};
+        auto expected = [](const Range::value_type& val) {return val.has_value();};
+        auto unexpected = [](const Range::value_type& val) {return !val.has_value();};
         return std::make_pair(
             FilterRange(range, expected),
             FilterRange(range, unexpected)

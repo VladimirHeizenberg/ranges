@@ -18,11 +18,11 @@ public:
     : aggregated_(aggregated) {}
 
     const_iterator begin() const {
-        return aggregated_.begin();
+        return aggregated_.cbegin();
     }
     
     const_iterator end() const {
-        return aggregated_.end();
+        return aggregated_.cend();
     }
 private:
     std::map<Key, Value> aggregated_;

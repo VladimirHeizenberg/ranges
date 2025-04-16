@@ -3,11 +3,12 @@
 #include <optional>
 
 #include "Range.h"
+#include "Transform.h"
 
 template <typename Key, typename Value>
 struct KV {
-    using key_type = typename Key;
-    using value_type = typename Value;
+    using key_type = Key;
+    using value_type = Value;
 	Key key;
 	Value value;
 
@@ -56,7 +57,7 @@ public:
     }
 
     JoinResult<left_value_type, right_value_type> operator*() const {
-        for (auto& c : right_range) {
+        for (auto c : right_range) {
             if (c.key == (*it).key) {
                 return JoinResult<left_value_type, right_value_type>{(*it).value, c.value};
             }
@@ -64,11 +65,11 @@ public:
         return JoinResult<left_value_type, right_value_type>{(*it).value, std::nullopt};
     }
 
-    bool operator==(const JoinIteratorKV& other) {
+    bool operator==(const JoinIteratorKV& other) const {
         return it == other.it;
     }
 
-    bool operator!=(const JoinIteratorKV& other) {
+    bool operator!=(const JoinIteratorKV& other) const {
         return it != other.it;
     }
 private:
@@ -102,33 +103,63 @@ private:
     RRange rrange_;
 };
 
-template<class Range>
-class Join : public Pipe {
+template<RangeSatisfiable Range>
+class JoinKVObject : public Pipe {
 public:
-    Join(const Range& range)
-    : range_(range) {}
+    JoinKVObject(const Range& range)
+    : range_(range)
+    , using_key_(false) {}
 
-    template<class LRange>
+    template<RangeSatisfiable LRange>
     auto operator()(const LRange& lrange) const {
         return JoinKVRange<LRange, Range>(lrange, range_);
     }
 private:
+    bool using_key_;
     Range range_;
 };
 
+template<RangeSatisfiable Range, class Key1, class Key2>
+class JoinComparatorObject : public Pipe {
+public:
+    JoinComparatorObject(const Range& range, const Key1& key1, const Key2& key2) 
+    : range_(range)
+    , key1_(key1)
+    , key2_(key2) {}
+
+    template<RangeSatisfiable LRange>
+    auto operator()(const LRange& lrange) const {
+        auto new_l_range = lrange | Transform(
+            [this](const typename LRange::value_type& value) {
+                return KV<
+                    std::invoke_result_t<Key1, typename LRange::value_type>, 
+                    typename LRange::value_type
+                >(key1_(value), value);
+            }
+        );
+        auto new_r_range = range_ | Transform(
+            [this](const typename Range::value_type& value) {
+                return KV<
+                    std::invoke_result_t<Key2, typename Range::value_type>, 
+                    typename Range::value_type
+                >(key2_(value), value);
+            }
+        );
+        return JoinKVRange(new_l_range, new_r_range);
+    } 
+private:
+    Range range_;
+    Key1 key1_;
+    Key2 key2_;
+};
 
 
-// template<class Range, class Key1, class Key2>
-// class Join : public Pipe {
-//     Join(const Range& range)
-//     : range_(range) {}
+template<RangeSatisfiable Range>
+auto Join(const Range& range) {
+    return JoinKVObject(range);
+}
 
-//     template<class LRange>
-//     auto operator()(const LRange& range) {
-//         return ;
-//     }
-// private:
-//     Range range_;
-//     Key1 key1_;
-//     Key2 key2_;
-// };
+template<RangeSatisfiable Range, class Key1, class Key2>
+auto Join(const Range& range, const Key1& key1, const Key2& key2) {
+    return JoinComparatorObject<Range, Key1, Key2>(range, key1, key2);
+}

@@ -8,8 +8,8 @@ public:
     using const_iterator = typename Container::const_iterator;
 
     AsDataFlow(const Container& container) 
-    : begin_(container.begin())
-    , end_(container.end()) {}
+    : begin_(container.cbegin())
+    , end_(container.cend()) {}
 
     const_iterator begin() const {
         return begin_;
