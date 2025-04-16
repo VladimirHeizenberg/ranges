@@ -19,7 +19,7 @@ public:
 
     SplitIterator(typename Range::iterator it1, typename Range::iterator end, std::string delims)
         : it(it1), end_(end), delims_(std::move(delims)) {
-        read_next();
+        ++(*this);
     }
 
     SplitIterator& operator++() {
@@ -30,10 +30,10 @@ public:
                 it->clear();
                 it->seekg(0);
                 ++it;
-                return;
+                return *this;
             }
             if (delims_.contains(ch)) {
-                return;
+                return *this;
             }
             word_ += ch;
         }
