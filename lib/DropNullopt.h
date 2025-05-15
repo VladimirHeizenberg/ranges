@@ -1,6 +1,5 @@
 #pragma once
 
-#include <functional>
 #include <optional>
 
 #include "Range.h"
@@ -18,7 +17,6 @@ public:
             return val.has_value();
         };
 
-        // return FilterRange(std::forward<Range>(range), predicate);
         return range | Filter(predicate);
     }
 };

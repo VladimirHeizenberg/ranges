@@ -20,3 +20,31 @@ TEST(FilterTest, FilterUpperCase) {
             | AsVector();
     ASSERT_THAT(result, testing::ElementsAre("HELLO", "WORLD"));
 }
+
+TEST(FilterTest, ConstFilter1) {
+    const std::vector<int> input = {1, 2, 3, 4, 5};
+    auto result = AsDataFlow(input);
+    auto result2 = result | Filter([](int x) { return x % 2 == 0; }) | AsVector();
+    ASSERT_THAT(result2, testing::ElementsAre(2, 4));
+}
+
+TEST(FilterTest, ConstFilter2) {
+    std::vector<int> input = {1, 2, 3, 4, 5};
+    const auto result = AsDataFlow(input);
+    auto result2 = result | Filter([](const int& x) { return x % 2 == 0; }) | AsVector();
+    ASSERT_THAT(result2, testing::ElementsAre(2, 4));
+}
+
+// TEST(FilterTest, NotConstFilter) {
+//     std::vector<int> input = {1, 2, 3, 4, 5};
+//     auto result = AsDataFlow(input);
+//     auto result2 = result | Filter([](int& x) {
+//          bool result = x % 2 == 0; 
+//          x += 2;
+//          return result;
+//         }) | AsVector();
+//     auto result3 = result | AsVector();
+//     ASSERT_THAT(result2, testing::ElementsAre(2, 4));
+//     ASSERT_THAT(result3, testing::ElementsAre(3, 4, 5, 6, 7));
+// }
+
