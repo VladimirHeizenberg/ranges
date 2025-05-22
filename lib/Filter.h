@@ -20,6 +20,9 @@ public:
         while (it_ != end_ && !predicate_(*it_)) {
             ++it_;
         }
+        if (it_ != end_) {
+            current_ = *it_;
+        }
     }
 
     FilterIterator& operator++() {
@@ -27,6 +30,7 @@ public:
         while (it_ != end_ && !predicate_(*it_)) {
             ++it_;
         }
+        if (it_ != end_) current_ = *it_;
         return *this;
     }
 
@@ -37,7 +41,7 @@ public:
     }
 
     reference operator*() {
-        return (*it_);
+        return (current_);
     }
 
     bool operator==(const FilterIterator& other) const {
@@ -52,6 +56,7 @@ private:
     RangeIterator it_;
     RangeIterator end_;
     Predicate predicate_;
+    value_type current_;
 };
 
 template<class RangeIterator, class Predicate>
@@ -70,6 +75,7 @@ public:
         while (it_ != end_ && !predicate_(*it_)) {
             ++it_;
         }
+        if (it_ != end_) current_ = *it_;
     }
 
     ConstFilterIterator& operator++() {
@@ -77,6 +83,7 @@ public:
         while (it_ != end_ && !predicate_(*it_)) {
             ++it_;
         }
+        if (it_ != end_) current_ = *it_;
         return *this;
     }
 
@@ -87,7 +94,7 @@ public:
     }
 
     const_reference operator*() const {
-        return (*it_);
+        return (current_);
     }
 
     bool operator==(const ConstFilterIterator& other) const {
@@ -102,6 +109,7 @@ private:
     RangeIterator it_;
     RangeIterator end_;
     Predicate predicate_;
+    value_type current_;
 };
 
 template<class Range, class Predicate>
@@ -109,13 +117,13 @@ class FilterRange {
 public:
     using CleanRange = std::remove_reference_t<Range>;
     using value_type = typename CleanRange::value_type;
-    using iterator = FilterIterator<typename CleanRange::iterator, Predicate>;
-    using const_iterator = ConstFilterIterator<typename CleanRange::const_iterator, Predicate>;
+    using iterator = FilterIterator<decltype(std::declval<Range&>().begin()), Predicate>;
+    using const_iterator = ConstFilterIterator<decltype(std::declval<const Range&>().begin()), Predicate>;
 
     template<class LRange, class P>
-    FilterRange(LRange&& range, P&& predicate)
+    FilterRange(LRange&& range, const P& predicate)
         : range_(std::forward<LRange>(range))
-        , predicate_(std::forward<P>(predicate)) {}
+        , predicate_(predicate) {}
 
     iterator begin() {
         return iterator(range_.begin(), range_.end(), predicate_);
@@ -143,20 +151,15 @@ template<class Predicate>
 class Filter: public Pipe {
 public:
 
-    Filter(Predicate& predicate)
-    : predicate_(predicate) {}
-
-    Filter(Predicate&& predicate)
+    Filter(Predicate predicate)
     : predicate_(std::move(predicate)) {}
 
     template<class Range>
     auto operator()(Range&& range) const {
-        using CleanRange = std::remove_reference_t<Range>;
         return details::FilterRange<Range, Predicate>(
-            std::forward<Range>(range), std::move(predicate_)
+            std::forward<Range>(range), predicate_
         );
     }
-
 private:
     Predicate predicate_;
 };

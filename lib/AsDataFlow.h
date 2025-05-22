@@ -6,31 +6,44 @@ template<class Container>
 class AsDataFlow : public Pipe {
 public:
     using value_type = typename Container::value_type;
-    using iterator = decltype(std::declval<Container&>().begin());
-    using const_iterator = decltype(std::declval<const Container&>().begin());
-    
-    AsDataFlow(Container&& container)
-        : container_(std::move(container)) {}
+    using iterator = typename Container::iterator;
 
-    AsDataFlow(Container& container)
-        : container_(container) {}
+    AsDataFlow(Container& container) 
+    : begin_(container.begin())
+    , end_(container.end()) {}
 
-    iterator begin() noexcept {
-        return container_.begin();
+    iterator begin() const {
+        return begin_;
     }
 
-    iterator end() noexcept {
-        return container_.end();
-    }
-
-    const_iterator begin() const noexcept {
-        return container_.begin();
-    }
-
-    const_iterator end() const noexcept {
-        return container_.end();
+    iterator end() const {
+        return end_;
     }
 
 private:
-    RangeStorage<Container> container_;
+    iterator begin_;
+    iterator end_;
+};
+
+template<class Container>
+class AsDataFlow<const Container> : public Pipe {
+public:
+    using value_type = typename Container::value_type;
+    using iterator = typename Container::const_iterator;
+
+    AsDataFlow(const Container& container) 
+    : begin_(container.begin())
+    , end_(container.end()) {}
+
+    iterator begin() const {
+        return begin_;
+    }
+
+    iterator end() const {
+        return end_;
+    }
+
+private:
+    iterator begin_;
+    iterator end_;
 };

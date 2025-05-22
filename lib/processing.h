@@ -7,3 +7,5 @@
 #include "DropNullopt.h"
 #include "Write.h"
 #include "Split.h"
+#include "Transform.h"
+#include "SplitExpected.h"
