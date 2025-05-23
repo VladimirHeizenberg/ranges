@@ -21,9 +21,18 @@ TEST(FlowConvertionsTest, ConstDataFlow) {
     ASSERT_THAT(flow, testing::ElementsAre(1, 2, 3, 4, 5));
 }
 
-TEST(FlowConvertionsTest, RValue) {
-    auto result = AsDataFlow(std::vector({1, 2, 3, 4, 5})) | AsVector();
-    ASSERT_THAT(result, testing::ElementsAreArray(std::vector<int>{1, 2, 3, 4, 5}));
+TEST(FlowConvertionsTest, ConstDataFlow2) {
+    const std::vector<int> input = {1, 2, 3, 4, 5};
+    auto flow = AsDataFlow(input);
+    auto result = flow | AsVector();
+    ASSERT_THAT(flow, testing::ElementsAreArray(std::vector<int>{1, 2, 3, 4, 5}));
+}
+
+TEST(FlowConvertionsTest, ConstDataFlow3) {
+    std::vector<int> input = {1, 2, 3, 4, 5};
+    const auto flow = AsDataFlow(input);
+    auto result = flow | AsVector();
+    ASSERT_THAT(flow, testing::ElementsAreArray(std::vector<int>{1, 2, 3, 4, 5}));
 }
 
 TEST(FilterTest, NotConstRangeChange) {

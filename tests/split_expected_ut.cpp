@@ -7,6 +7,10 @@
 
 struct Department {
     std::string name;
+
+    bool operator==(const Department& other) const {
+        return name == other.name;
+    }
 };
 
 std::expected<Department, std::string> ParseDepartment(const std::string& str) {
@@ -23,7 +27,7 @@ TEST(SplitExpectedTest, SplitExpected) {
     std::vector<std::stringstream> files(1);
     files[0] << "good-department|bad department||another-good-department";
 
-    auto [unexpected_flow, good_flow] = AsDataFlow(files) | Split("|") | Transform(ParseDepartment) | SplitExpected(ParseDepartment);
+    auto [unexpected_flow, good_flow] = AsDataFlow(files) | Split("|") | Transform(ParseDepartment) | SplitExpected();
 
     std::stringstream unexpected_file;
     unexpected_flow | Write(unexpected_file, '.');
