@@ -9,3 +9,8 @@
 #include "Split.h"
 #include "Transform.h"
 #include "SplitExpected.h"
+#include "AggregateByKey.h"
+#include "Join.h"
+#include "OpenFiles.h"
+#include "Out.h"
+#include "Dir.h"
