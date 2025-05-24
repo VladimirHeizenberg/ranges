@@ -37,8 +37,10 @@ struct JoinResult {
 template<class LRange, class RRange>
 class JoinIteratorKV {
 public:
-    using left_value_type  = typename LRange::value_type::value_type;
-    using right_value_type = typename RRange::value_type::value_type;
+    using CleanRRange           = std::remove_reference_t<RRange>;
+
+    using left_value_type       = typename LRange::value_type::value_type;
+    using right_value_type      = typename CleanRRange::value_type::value_type;
 
     JoinIteratorKV(LRange::iterator it1, const RRange& rrange)
     : it(it1)
@@ -81,9 +83,10 @@ class JoinKVRange {
 public:
 
     using iterator              = JoinIteratorKV<LRange, RRange>;
+    using CleanRRange           = std::remove_reference_t<RRange>;
 
     using raw_left_value_type   = typename LRange::value_type;
-    using raw_right_value_type  = typename RRange::value_type;
+    using raw_right_value_type  = typename CleanRRange::value_type;
 
     using left_value_type       = typename raw_left_value_type::value_type;
     using right_value_type      = typename raw_right_value_type::value_type;
@@ -163,7 +166,7 @@ private:
 
 
 template<class Range>
-auto Join(const Range& range) {
+auto Join(Range&& range) {
     return JoinKVObject<Range>(range);
 }
 
