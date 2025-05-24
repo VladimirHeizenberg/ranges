@@ -10,10 +10,10 @@ class OpenFiles : public Pipe {
 public:
     template<class Range>
     auto operator()(Range&& range) {
-        auto function = [](const std::filesystem::path path) -> std::optional<std::ifstream> {
+        auto function = [](const std::filesystem::path& path) {
             std::ifstream stream(path);
             if (!stream.is_open()) {
-                return std::nullopt;
+                throw std::runtime_error("File " + path.string() + " not found");
             }
             return std::move(stream);
         };

@@ -18,12 +18,27 @@ public:
     TransformIterator(typename Range::iterator it,
                       typename Range::iterator end,
                       TransformationFunction func)
-        : it_(it)
-        , end_(end)
-        , func_(func) {}
+    : it_(it)
+    , end_(end)
+    , func_(func) {
+        if (it_ != end_) {
+            current_ = std::make_shared<value_type>(func_(*it_));
+        }
+    }
+
+    TransformIterator(const TransformIterator& other)
+        : it_(other.it_)
+        , end_(other.end_)
+        , func_(other.func_)
+        , current_(other.current_) {}
 
     TransformIterator& operator++() {
         ++it_;
+        if (it_ != end_) {
+            current_ = std::make_shared<value_type>(func_(*it_));
+        } else {
+            current_.reset();
+        }
         return *this;
     }
 
@@ -33,13 +48,22 @@ public:
         return copy;
     }
 
-    decltype(auto) operator*() {
-        return func_(*it_);
+    reference operator*() {
+        return *current_;
     }
 
-    decltype(auto) operator*() const {
-        return func_(*it_);
+    const_reference operator*() const {
+        return *current_;
     }
+
+    value_type* operator->() {
+        return current_.get();
+    }
+
+    const value_type* operator->() const {
+        return current_.get();
+    }
+
 
     bool operator==(const TransformIterator& other) const {
         return it_ == other.it_;
@@ -53,9 +77,10 @@ private:
     typename Range::iterator it_;
     typename Range::iterator end_;
     TransformationFunction func_;
+    std::shared_ptr<value_type> current_;
 };
 
-template<class  Range, class TransformationFunction>
+template<class Range, class TransformationFunction>
 class TransformRange {
 public:
     using CleanRange     = std::remove_reference_t<Range>;
