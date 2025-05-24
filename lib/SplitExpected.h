@@ -11,7 +11,7 @@
 class SplitExpected : public Pipe {
 public:
     template<class Range>
-    auto operator()(Range&& range) const {
+    auto operator()(const Range& range) const {
         auto expected_value = [](const auto& val) { return val.value(); };
         auto unexpected_value = [](const auto& val) { return val.error(); };
 

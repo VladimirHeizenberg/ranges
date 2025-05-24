@@ -9,8 +9,8 @@ public:
         : out_(out), delimiter_(delimiter) {}
   
     template<class Range>
-    Range operator()(Range&& range) const {
-        for (auto& item : range) {
+    Range&& operator()(Range&& range) const {
+        for (const auto& item : range) {
             out_ << item << delimiter_;
         }
         return range;

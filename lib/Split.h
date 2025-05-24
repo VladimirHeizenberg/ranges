@@ -10,9 +10,9 @@ template <typename RangeIterator>
 class SplitIterator {
 public:
     using iterator_category = std::input_iterator_tag;
-    using value_type = std::string;
-    using reference = value_type&;
-    using const_reference = const value_type&;
+    using value_type        = std::string;
+    using reference         = value_type&;
+    using const_reference   = const value_type&;
 
     SplitIterator(RangeIterator it, RangeIterator end, const std::string& delims)
         : it_(it)
@@ -77,7 +77,7 @@ template <typename Range>
 class SplitRange {
 public:
     using CleanRange = std::remove_reference_t<Range>;
-    using iterator = SplitIterator<decltype(std::declval<Range&>().begin())>;
+    using iterator   = SplitIterator<decltype(std::declval<Range&>().begin())>;
     using value_type = std::string;
 
     template<class R>
@@ -94,7 +94,7 @@ public:
     }
 
 private:
-    RangeStorage<Range> range_;
+    Range range_;
     std::string delims_;
 };
 

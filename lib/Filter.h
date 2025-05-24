@@ -20,9 +20,6 @@ public:
         while (it_ != end_ && !predicate_(*it_)) {
             ++it_;
         }
-        if (it_ != end_) {
-            current_ = *it_;
-        }
     }
 
     FilterIterator& operator++() {
@@ -30,7 +27,6 @@ public:
         while (it_ != end_ && !predicate_(*it_)) {
             ++it_;
         }
-        if (it_ != end_) current_ = *it_;
         return *this;
     }
 
@@ -40,8 +36,8 @@ public:
         return copy;
     }
 
-    reference operator*() {
-        return (current_);
+    decltype(auto) operator*() {
+        return (*it_);
     }
 
     bool operator==(const FilterIterator& other) const {
@@ -56,7 +52,6 @@ private:
     RangeIterator it_;
     RangeIterator end_;
     Predicate predicate_;
-    value_type current_;
 };
 
 template<class RangeIterator, class Predicate>
@@ -75,7 +70,6 @@ public:
         while (it_ != end_ && !predicate_(*it_)) {
             ++it_;
         }
-        if (it_ != end_) current_ = *it_;
     }
 
     ConstFilterIterator& operator++() {
@@ -83,7 +77,6 @@ public:
         while (it_ != end_ && !predicate_(*it_)) {
             ++it_;
         }
-        if (it_ != end_) current_ = *it_;
         return *this;
     }
 
@@ -93,8 +86,8 @@ public:
         return copy;
     }
 
-    const_reference operator*() const {
-        return (current_);
+    decltype(auto) operator*() const {
+        return (*it_);
     }
 
     bool operator==(const ConstFilterIterator& other) const {
@@ -143,7 +136,7 @@ public:
 
 private:
     Predicate predicate_;
-    RangeStorage<Range> range_;
+    Range range_;
 };
 } // namespace details
 

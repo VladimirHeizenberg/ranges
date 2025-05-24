@@ -8,7 +8,9 @@
 template<class Range, class TransformationFunction>
 class TransformIterator {
 public:
-    using value_type        = std::invoke_result_t<TransformationFunction, typename Range::value_type>;
+    using CleanRange        = std::remove_reference_t<Range>;
+    using RawIterValue      = decltype(*std::begin(std::declval<Range&>()));
+    using value_type        = decltype(std::declval<TransformationFunction>()(std::declval<RawIterValue>()));
     using reference         = value_type&;
     using const_reference   = const value_type&;
     using iterator_category = std::input_iterator_tag;
@@ -18,13 +20,10 @@ public:
                       TransformationFunction func)
         : it_(it)
         , end_(end)
-        , func_(func) {
-            if (it_ != end_) result_ = func_(*it_);
-        }
+        , func_(func) {}
 
     TransformIterator& operator++() {
         ++it_;
-        if (it_ != end_) result_ = func_(*it_);
         return *this;
     }
 
@@ -34,12 +33,12 @@ public:
         return copy;
     }
 
-    reference operator*() {
-        return (result_);
+    decltype(auto) operator*() {
+        return func_(*it_);
     }
 
-    const_reference operator*() const {
-        return (result_);
+    decltype(auto) operator*() const {
+        return func_(*it_);
     }
 
     bool operator==(const TransformIterator& other) const {
@@ -54,15 +53,15 @@ private:
     typename Range::iterator it_;
     typename Range::iterator end_;
     TransformationFunction func_;
-    value_type result_;
 };
 
 template<class  Range, class TransformationFunction>
 class TransformRange {
 public:
-    using CleanRange = std::remove_reference_t<Range>;
-    using value_type = std::invoke_result_t<TransformationFunction, typename CleanRange::value_type>;
-    using iterator = TransformIterator<CleanRange, TransformationFunction>;
+    using CleanRange     = std::remove_reference_t<Range>;
+    using RawIterValue   = decltype(*std::begin(std::declval<Range&>()));
+    using value_type     = decltype(std::declval<TransformationFunction>()(std::declval<RawIterValue>()));
+    using iterator       = TransformIterator<CleanRange, TransformationFunction>;
 
     TransformRange(Range&& range, const TransformationFunction& pred)
         : range_(range)
@@ -84,7 +83,7 @@ public:
         return iterator(range_.end(), range_.end(), pred_);
     }
 private:
-    RangeStorage<Range> range_;
+    Range range_;
     TransformationFunction pred_;
 };
 

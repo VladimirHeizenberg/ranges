@@ -66,3 +66,112 @@ TEST(AggregateByKeyTest, AggregatingWithSeveralOutputsForEachKey) {
         )
     );
 }
+
+TEST(AggregateByKeyTest, ConstAggregatingWithSeveralOutputsForEachKey) {
+    const std::vector<Employee> employees = {
+        {3, "name1"},
+        {1, "name1"},
+        {1, "name2"},
+        {2, "name1"},
+        {2, "name2"},
+        {2, "name3"}
+    };
+
+    auto result =
+        AsDataFlow(employees)
+            | AggregateByKey(
+                std::vector<Employee>{},
+                [](const Employee& employee, std::vector<Employee>& accumulated) {
+                    if (accumulated.size() == 2) {
+                        return;
+                    }
+                    accumulated.push_back(employee);
+                },
+                [](const Employee& employee) { return employee.department_id; }
+            )
+            | AsVector();
+
+    ASSERT_THAT(
+        result,
+        ::testing::UnorderedElementsAre(
+            std::make_pair(3, std::vector<Employee>{Employee{3, "name1"}}),
+            std::make_pair(1, std::vector<Employee>{Employee{1, "name1"}, Employee{1, "name2"}}),
+            std::make_pair(2, std::vector<Employee>{Employee{2, "name1"}, Employee{2, "name2"}})
+        )
+    );
+}
+
+TEST(AggregateByKeyTest, NotConstAggregatingWithSeveralOutputsForEachKey) {
+    std::vector<Employee> employees = {
+        {3, "name1"},
+        {1, "name1"},
+        {566, "name239"},
+        {1, "name2"},
+        {2, "name1"},
+        {239, "name566"},
+        {2, "name2"},
+        {2, "name3"}
+    };
+
+    auto result =
+        AsDataFlow(employees) | Filter([](Employee& employ) {return employ.department_id < 100;})
+            | AggregateByKey(
+                std::vector<Employee>{},
+                [](Employee& employee, std::vector<Employee>& accumulated) {
+                    if (accumulated.size() == 2) {
+                        return;
+                    }
+                    accumulated.push_back(employee);
+                },
+                [](Employee& employee) { return employee.department_id; }
+            )
+            | AsVector();
+
+    ASSERT_THAT(
+        result,
+        ::testing::UnorderedElementsAre(
+            std::make_pair(3, std::vector<Employee>{Employee{3, "name1"}}),
+            std::make_pair(1, std::vector<Employee>{Employee{1, "name1"}, Employee{1, "name2"}}),
+            std::make_pair(2, std::vector<Employee>{Employee{2, "name1"}, Employee{2, "name2"}})
+        )
+    );
+}
+
+TEST(AggregateByKeyTest, AnotherConstAggregatingWithSeveralOutputsForEachKey) {
+    std::vector<Employee> employees = {
+        {3, "name1"},
+        {1, "name1"},
+        {566, "name239"},
+        {1, "name2"},
+        {2, "name1"},
+        {239, "name566"},
+        {2, "name2"},
+        {2, "name3"}
+    };
+
+    const auto result1 =
+        AsDataFlow(employees) | Filter([](Employee& employ) {return employ.department_id < 100;});
+
+    auto result = result1 | AggregateByKey(
+                std::vector<Employee>{},
+                [](const Employee& employee, std::vector<Employee>& accumulated) {
+                    if (accumulated.size() == 2) {
+                        return;
+                    }
+                    accumulated.push_back(employee);
+                },
+                [](const Employee& employee) { return employee.department_id; }
+            )
+            | AsVector();
+
+    ASSERT_THAT(
+        result,
+        ::testing::UnorderedElementsAre(
+            std::make_pair(3, std::vector<Employee>{Employee{3, "name1"}}),
+            std::make_pair(1, std::vector<Employee>{Employee{1, "name1"}, Employee{1, "name2"}}),
+            std::make_pair(2, std::vector<Employee>{Employee{2, "name1"}, Employee{2, "name2"}})
+        )
+    );
+}
+
+
