@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <optional>
+#include <filesystem>
 
 #include "Range.h"
 #include "Transform.h"
