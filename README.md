@@ -1,85 +1,68 @@
-# Лабораторная работа 8
+# A Pipeline-based Adapter Library for C++
 
-STL. Адаптеры.
+The library focuses on lazy evaluation and minimal memory needed for making complex data flows easy to read and write.
 
-## Задача
+## Key features
 
-Вам предстоит разработать библиотеку адаптеров для упрощенной работы с алгоритмами, контейнерами и файлами. 
-Обобщенный подход к алгоримам и итераторам позволяет более элегантно решать типовые задачи.
+* **Lazy Evaluation:** most adapters do not perform computing until the data is actually requested.
+* **Memory Efficiency:** most adapters have O(1) space complexity (excluding `AggregateByKey` and `Join`).
+* **Comfortable API:** all adapters support `|` operator for creating pipelines.
+* **Value categories:** all adapters support both `l-values` and `r-values`.
+* **Modern C++ features:** using of concepts, `std::expected`, extensive using of templates.
 
-Например, для решения задачи нахождения частотности слов среди всех текстовых файлов директории, код может выглядеть следующим образом:
+## Showcase: Word Frequency Counter for all files in directory
 
 ```cpp
-Dir(argv[1], recursive) 
-    | Filter([](std::filesystem::path& p){ return p.extension() == ".txt"; })
+Dir(path, recursive) 
+    | Filter([](auto& p) { return p.extension() == ".txt"; })
     | OpenFiles()
     | Split("\n ,.;")
-    | Transform(
-        [](std::string& token) { 
-            std::transform(token.begin(), token.end(), token.begin(), [](char c){return std::tolower(c);});
-            return token;
-        })
+    | Transform([](std::string& token) { 
+          for(char &c : token) c = std::tolower(c);
+          return token;
+      })
     | AggregateByKey(
-        0uz, 
-        [](const std::string&, size_t& count) { ++count;},
-        [](const std::string& token) { return token;}
+          0uz, 
+          [](const std::string&, size_t& count) { ++count; },
+          [](const std::string& token) { return token; }
       )
-    | Transform([](const std::pair<std::string, size_t>& stat) { return std::format("{} - {}", stat.first, stat.second);})
     | Out(std::cout);
 ```
 
+### Main adapters
 
-Еще одним значимым отличием такого подхода от классических является то, что вычисления являются могут быть [ленивыми](https://ru.wikipedia.org/wiki/%D0%9B%D0%B5%D0%BD%D0%B8%D0%B2%D1%8B%D0%B5_%D0%B2%D1%8B%D1%87%D0%B8%D1%81%D0%BB%D0%B5%D0%BD%D0%B8%D1%8F), а создаваемые объекты не владеют массивом данных для решения данной задачи. Подобный подход, в частности, применяется в классах [std::string_view](https://en.cppreference.com/w/cpp/string/basic_string_view) и [std::span](https://en.cppreference.com/w/cpp/container/span)
+##### 📁 I/O & File System
 
+**Dir** – Recursively iterates through directory entries.
+**OpenFiles** – Streams file contents from a sequence of paths.
+**Out / Write** – Formatted output to any std::ostream.
 
-### Требуемые адаптеры
+##### ⚡ Data Transformation (Lazy)
 
-* Dir       - берет все файлы в директории (и рекурсивно по всем поддиректориям)
-* OpenFiles - открывает файловый поток для каждого пути из предыдущего адаптера
-* Split      - делит входной поток по списку делимитеров передаваемых через аргументы
-* Out       - выводит данные в выходной поток
-* AsDataFlow - преобразует контейнер в поток данных для дальнейшей обработки
-* Transform - изменяет значения элементов, наподобие того как это делает алгоритм transform, применяя заданную функцию к каждому элементу
-* Filter    - фильтрация по определенному признаку, признак передается в качестве аргумента
-* Write     - проходится по всем элементам входного диапазона и записать их в указанный поток вывода, вставляя между элементами (а также после каждого элемента) заданный разделитель.
-* AsVector  - собирает результаты обработки в вектор
-* Join      - объединяет два потока данных по ключу, аналогично операции LEFT JOIN в SQL
-* KV        - структура ключ-значение, используемая для операций объединения
-* JoinResult - результат операции объединения, содержащий данные из обоих потоков
-* DropNullopt - фильтрует `std::optinal<T>` поток от `std::nullopt` значений
-* SplitExpected - в случае если предыдущий адаптер возвращает expeceted, позволяет разделить пайплайн обработки на 2 для ожидаемых и нет результатов
-* AggregateByKey - агрегация значений относительно соответствующего ключа. Значение, соответствующее ключу, обновляется через переданный функциональный объект - агрегатор. Выполняется **не лениво** 
-    * Пример:
-        ```cpp
-        aggregator := 
-        [int value{}](char c) { 
-            value++; 
-            return value; 
-        }
-        [ a, b, c, d, a, a, b, d ] -> [ (a, 3), (b, 2), (c,1), (d,2) ]
-        ```
+**Filter** – Skips elements that don't match a predicate.
+**Transform** – Applies a function to each element (map).
+**Split** – Tokenizes strings based on multiple delimiters.
+**DropNullopt** – Unwraps std::optional streams, filtering out nullopt.
+**SplitExpected** – Handles std::expected by branching success and error paths.
 
-Требование по памяти ко всем адаптерам кроме AggregateByKey и Join - константа.
+##### 📊 Aggregation & Joining (Eager/Stateful)
 
-## Тесты
+**AggregateByKey** – Performs key-value aggregation (e.g., counting, summing).
+**Join** – Implements a LEFT JOIN logic between two data streams.
+**AsVector** – Collects the pipeline results into a std::vector.
 
-Все вышеуказанные сущности должны быть покрыты тестами, с помощью фреймворка [Google Test](http://google.github.io/googletest). Часть тестов уже написана.
+### Getting started
 
-Тесты также являются частью задания, поэтому покрытие будет влиять на максимальный балл.
+#### Prerequisites
 
-## NB
+* A **compiler** supporting `C++23` (for concepts, `std::expected` and etc.)
+* **CMake** (version 3.12 or higher)
 
-1. При реализации классов, для их использования в `range-based for`, они должны удовлетворять ряду [требований](https://en.cppreference.com/w/cpp/language/range-for).
+#### Building and testing
 
-2. Решаемая вами задача похожа на библиотеку std::ranges. Ее использование в данной работе запрещено, однако вы можете с ней ознакомиться и подчеркнуть ряд идей вашей реализации
-
-4. Подумайте как переписать 1ю лабораторную работу прошлого семестра c помощью полученной библиотеки
-
-
-## Deadline
-
-1. 02.04.25. 23:59 0.8
-2. 09.04.25. 23:59 0.65
-3. 16.04.25. 23:59 0.5
-
-Максимальное количество баллов - 15
+```bash
+mkdir build && cd build
+cmake ..
+cmake --build . --target processing-lib-tests
+ctest -V
+```
