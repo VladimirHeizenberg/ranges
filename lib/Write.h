@@ -13,7 +13,7 @@ public:
         for (const auto& item : range) {
             out_ << item << delimiter_;
         }
-        return range;
+        return std::forward<Range>(range);
     }
   
 private:

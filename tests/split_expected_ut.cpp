@@ -26,8 +26,9 @@ std::expected<Department, std::string> ParseDepartment(const std::string& str) {
 TEST(SplitExpectedTest, SplitExpected) {
     std::vector<std::stringstream> files(1);
     files[0] << "good-department|bad department||another-good-department";
+    auto t = AsDataFlow(files) | Split("|") | Transform(ParseDepartment);
 
-    auto [unexpected_flow, good_flow] = AsDataFlow(files) | Split("|") | Transform(ParseDepartment) | SplitExpected();
+    auto [unexpected_flow, good_flow] = t | SplitExpected();
 
     std::stringstream unexpected_file;
     unexpected_flow | Write(unexpected_file, '.');
