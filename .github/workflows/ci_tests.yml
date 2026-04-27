@@ -19,7 +19,7 @@ jobs:
         run: cmake -S . -B cmake-build-debug
 
       - name: Build target
-        run: cmake --build cmake-build-debug --target processing-lib-test
+        run: cmake --build cmake-build-debug --target processing-lib-tests
         
       - name: Run tests
         working-directory: cmake-build-debug
