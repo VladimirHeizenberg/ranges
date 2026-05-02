@@ -1,5 +1,7 @@
 # A Pipeline-based Adapter Library for C++
 
+![C++ Standard](https://img.shields.io/badge/C%2B%2B-20%2F23-blue.svg) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) ![Tests](https://github.com/VladimirHeizenberg/ranges/actions/workflows/ci-tests.yml/badge.svg)
+
 The library focuses on lazy evaluation and minimal memory needed for making complex data flows easy to read and write.
 
 ## Key features
@@ -31,25 +33,25 @@ Dir(path, recursive)
 
 ### Main adapters
 
-##### 📁 I/O & File System
+#### 📁 I/O & File System
 
-**Dir** – Recursively iterates through directory entries.
-**OpenFiles** – Streams file contents from a sequence of paths.
-**Out / Write** – Formatted output to any std::ostream.
+* **Dir** – Recursively iterates through directory entries.
+* **OpenFiles** – Streams file contents from a sequence of paths.
+* **Out / Write** – Formatted output to any std::ostream.
 
-##### ⚡ Data Transformation (Lazy)
+#### ⚡ Data Transformation (Lazy)
 
-**Filter** – Skips elements that don't match a predicate.
-**Transform** – Applies a function to each element (map).
-**Split** – Tokenizes strings based on multiple delimiters.
-**DropNullopt** – Unwraps std::optional streams, filtering out nullopt.
-**SplitExpected** – Handles std::expected by branching success and error paths.
+* **Filter** – Skips elements that don't match a predicate.
+* **Transform** – Applies a function to each element (map).
+* **Split** – Tokenizes strings based on multiple delimiters.
+* **DropNullopt** – Unwraps std::optional streams, filtering out nullopt.
+* **SplitExpected** – Handles std::expected by branching success and error paths.
 
-##### 📊 Aggregation & Joining (Eager/Stateful)
+#### 📊 Aggregation & Joining (Eager/Stateful)
 
-**AggregateByKey** – Performs key-value aggregation (e.g., counting, summing).
-**Join** – Implements a LEFT JOIN logic between two data streams.
-**AsVector** – Collects the pipeline results into a std::vector.
+* **AggregateByKey** – Performs key-value aggregation (e.g., counting, summing).
+* **Join** – Implements a LEFT JOIN logic between two data streams.
+* **AsVector** – Collects the pipeline results into a std::vector.
 
 ### Getting started
 

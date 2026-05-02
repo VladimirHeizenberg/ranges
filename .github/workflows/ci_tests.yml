@@ -2,7 +2,8 @@ name: "CI tests"
 
 on:
   push:
-    branches: [develop]
+    branches: [main]
+  pull-request:
 
 jobs:
 
