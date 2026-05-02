@@ -1,6 +1,6 @@
 # A Pipeline-based Adapter Library for C++
 
-![C++ Standard](https://img.shields.io/badge/C%2B%2B-20%2F23-blue.svg) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) ![Tests](https://github.com/VladimirHeizenberg/ranges/actions/workflows/ci_tests.yml/badge.svg)
+![C++ Standard](https://img.shields.io/badge/C%2B%2B-23-blue.svg) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) ![Tests](https://github.com/VladimirHeizenberg/ranges/actions/workflows/ci_tests.yml/badge.svg)
 
 The library focuses on lazy evaluation and minimal memory needed for making complex data flows easy to read and write.
 
